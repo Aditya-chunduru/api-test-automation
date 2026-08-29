@@ -1,0 +1,8 @@
+# Environment variables
+test.env
+.env
+
+# Python cache and testing artifacts
+__pycache__/
+.pytest_cache/
+*.pyc
