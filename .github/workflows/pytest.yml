@@ -27,12 +27,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests python-dotenv pytest
 
-      - name: Run Pytest
-        env: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
-          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}
-          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}
-
+      - name: Create .env file 
         run: |
-          pytest
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env
+          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env
+
+      - name: Run Pytest
+        run: pytest
