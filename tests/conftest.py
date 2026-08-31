@@ -13,7 +13,10 @@ if not ENV_PATH.exists():
     # Fallback to same directory if root check fails
     ENV_PATH = BASE_DIR / "test.env"
 
-load_dotenv(dotenv_path=ENV_PATH, override=True)
+if not os.getenv("SUPABASE_URL") and ENV_PATH.exists():
+    load_dotenv(dotenv_path=ENV_PATH, override=True)
+else:
+    load_dotenv(override=True)  # Ensure we load even if some vars exist
 
 
 @pytest.fixture(scope="session")
