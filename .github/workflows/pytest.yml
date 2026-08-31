@@ -29,10 +29,10 @@ jobs:
 
       - name: Create .env file 
         run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
-          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> .env
-          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> .env
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> test.env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> test.env
+          echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> test.env
+          echo "TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}" >> test.env
 
       - name: Run Pytest
         run: pytest
