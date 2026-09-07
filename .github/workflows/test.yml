@@ -1,6 +1,5 @@
 name: API Test Automation Pipeline
 
-# Trigger the workflow on pushes or pull requests to the main branch
 on:
   push:
     branches: [ "main", "master" ]
@@ -12,30 +11,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout your repository code onto the runner
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # 2. Set up Python version
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip" # Caches dependencies to speed up future runs
+          cache: "pip"
 
-      # 3. Install project dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pytest requests python-dotenv
 
-      # 4. Create a test.env file dynamically for the CI environment
-      # (Since we don't upload our local test.env to GitHub, we generate one on the fly for the runner)
-      - name: Create environment configuration
-        run: |
-          echo "BASE_URL=https://jsonplaceholder.typicode.com" >> test.env
-
-      # 5. Run the pytest suite
       - name: Run pytest
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          RESTRICTED_USER_JWT: ${{ secrets.RESTRICTED_USER_JWT }}
         run: |
           python -m pytest -v
