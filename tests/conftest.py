@@ -101,7 +101,7 @@ def restricted_api_session():
     """Session mapped to a low-privilege or secondary test user for isolation checks."""
     session = requests.Session()
     supabase_anon_key = os.getenv("SUPABASE_ANON_KEY")
-    restricted_token = os.getenv("RESTRICTED_USER_JWT")
+    restricted_token = os.getenv("RESTRICTED_USER_JWT") or supabase_anon_key  # Fallback to anon key if no restricted token is set
 
     session.headers.update(
         {
