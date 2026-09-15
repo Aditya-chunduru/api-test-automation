@@ -35,8 +35,8 @@ class SupabaseLoadTestUser(HttpUser):
 
     def on_start(self):
         adapter = HTTPAdapter(
-            pool_connections=50,
-            pool_maxsize=50,
+            pool_connections=150,
+            pool_maxsize=150,
             max_retries=Retry(
                 total=3,
                 backoff_factor=0.1,
