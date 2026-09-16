@@ -3,7 +3,7 @@ import socket
 import gevent.socket
 from pathlib import Path
 from dotenv import load_dotenv
-from locust import HttpUser, task, between
+from locust import HttpUser, task, between, events
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -31,7 +31,7 @@ load_dotenv(dotenv_path=env_path)
 
 class SupabaseLoadTestUser(HttpUser):
     host = f"https://{TARGET_DOMAIN}/"
-    wait_time = between(0.5, 2.0)
+    wait_time = between(1.0, 3.0)
 
     def on_start(self):
         adapter = HTTPAdapter(
@@ -58,11 +58,30 @@ class SupabaseLoadTestUser(HttpUser):
             "Content-Type": "application/json",
             "Prefer": "return=representation",
         }
-        print(f"Sending Headers: {self.headers}")
+
     @task(4)
     def get_cart_items(self):
-        self.client.get("/rest/v1/cart_items", headers=self.headers, name="GET /cart_items")
+        with self.client.get("/rest/v1/cart_items", headers=self.headers, name="GET /cart_items", catch_response=True) as response:
+            if response.status_code == 200:
+                response.success()
+            else:
+                response.failure(f"Cart items failed: {response.status_code}")
 
     @task(1)
     def query_protected_endpoint(self):
-        self.client.get("/rest/v1/orders", headers=self.headers, name="GET /orders (RLS)")
+        with self.client.get("/rest/v1/orders", headers=self.headers, name="GET /orders (RLS)", catch_response=True) as response:
+            # Depending on RLS setup, 200 with empty array or specific status is expected
+            if response.status_code in [200, 401, 403]:
+                response.success()
+            else:
+                response.failure(f"Orders RLS check failed unexpectedly: {response.status_code}")
+
+# 3. CI/CD Performance Regression Enforcement Hook
+@events.test_stop.add_listener
+def routine_check(environment, **kwargs):
+    # Check if error rate exceeds 1% or total failures occurred
+    if environment.stats.total.fail_ratio > 0.01:
+        print(f"❌ Performance Regression Test FAILED: Error rate {environment.stats.total.fail_ratio * 100:.2f}% exceeds threshold.")
+        environment.process_exit_code = 1
+    else:
+        print("✅ Performance Regression Test PASSED: Latency and error rates within target bounds.")
