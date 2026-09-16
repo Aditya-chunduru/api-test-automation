@@ -1,0 +1,37 @@
+name: Supabase Load Test & Performance Gate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # Allows manual triggers from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install locust python-dotenv requests urllib3
+
+      - name: Create test.env from GitHub Secrets
+        run: |
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> test.env
+        # If your test.env sits in a parent directory, adjust the path here accordingly
+
+      - name: Run Locust Headless Load Test
+        run: |
+          locust -f locustfile.py --headless -u 5 -r 1 --run-time 30s --host https://aommnxekaskgjlwjsdpc.supabase.co
