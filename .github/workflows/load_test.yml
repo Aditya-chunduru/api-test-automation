@@ -33,5 +33,6 @@ jobs:
         # If your test.env sits in a parent directory, adjust the path here accordingly
 
       - name: Run Locust Headless Load Test
+        working-directory: tests
         run: |
           locust -f locustfile.py --headless -u 5 -r 1 --run-time 30s --host https://aommnxekaskgjlwjsdpc.supabase.co
