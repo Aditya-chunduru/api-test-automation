@@ -26,13 +26,7 @@ jobs:
 
       - name: Run Locust Headless Sweep
         run: |
-          LOCUST_FILE=$(find . -name "locustfile_wrapper.py" | head -n 1)
-          if [ -z "$LOCUST_FILE" ]; then
-            echo "❌ Error: locustfile_wrapper.py not found."
-            find . -maxdepth 3 -not -path '*/.*' -ls
-            exit 1
-          fi
-          locust -f "$LOCUST_FILE" \
+          locust -f tests/locustfile.py \
             --headless \
             -u 50 \
             -r 5 \
