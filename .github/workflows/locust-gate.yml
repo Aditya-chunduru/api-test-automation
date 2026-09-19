@@ -26,7 +26,7 @@ jobs:
 
       - name: Run Locust Headless Sweep
         run: |
-          locust -f locustfile_wrapper.py \
+          locust -f tests/locustfile_wrapper.py \
             --headless \
             -u 50 \
             -r 5 \
