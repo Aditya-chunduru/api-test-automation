@@ -28,8 +28,10 @@ jobs:
         env:
           SUPABASE_URL: https://aommnxekaskgjlwjsdpc.supabase.co
           SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }} # dual-key parity for dotenv/env fallback
         run: |
+          # -u 50: Stress concurrency (drop to -u 15 if free-tier rate limits trigger 429s)
+          # -r 5: Gentle user ramp-up (5/sec) to prevent initial socket storms
           locust -f tests/locustfile.py \
             --headless \
             -u 50 \
@@ -40,7 +42,8 @@ jobs:
 
       - name: Evaluate Error Rate Gate
         run: |
-          # Parse aggregate error rate from Locust stats CSV or assert exit criteria
+          # Process exit code is enforced via test_stop hook in locustfile.py;
+          # this step dumps telemetry summary for PR build logs review.
           STATS_FILE="load_test_results_stats.csv"
           if [ -f "$STATS_FILE" ]; then
             echo "--- Load Test Stats Summary ---"
@@ -48,4 +51,3 @@ jobs:
           else
             echo "Warning: Stats CSV not found."
           fi
-          
