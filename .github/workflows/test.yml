@@ -1,10 +1,16 @@
+# ==============================================================================
+# PIPELINE PURPOSE:
+# Automated functional and multi-tier RLS security regression gate for 
+# Supabase/PostgREST backends. Executes on core branch syncs and PRs.
+# ==============================================================================
+
 name: API Test Automation Pipeline
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master" ] # Gate core integration branches on direct commit
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master" ] # Prevent security/contract regressions on incoming PRs
 
 jobs:
   test:
@@ -12,25 +18,26 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Pull source code and test suite artifacts
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
+          cache: "pip" # Speed up dependency resolution across runs
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest requests python-dotenv
+          pip install pytest requests python-dotenv # Test runner, HTTP client, local env parser parity
 
       - name: Run pytest
         env:
+          # Inject secrets into process environment for test fixtures and client initialization
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-          RESTRICTED_USER_JWT: ${{ secrets.RESTRICTED_USER_JWT }}
+          RESTRICTED_USER_JWT: ${{ secrets.RESTRICTED_USER_JWT }} # Multi-tier RLS boundary context isolation testing
         run: |
-          python -m pytest -v
+          python -m pytest -v --tb=short # -v: full test audit trail, --tb=short: compact CI log noise reduction
