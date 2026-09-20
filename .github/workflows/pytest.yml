@@ -5,8 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:
-
+  workflow_dispatch: # Enable manual re-runs from GitHub Actions UI
 
 jobs:
   test:
@@ -16,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -27,8 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests python-dotenv pytest
 
-      - name: Create test.env file 
+      - name: Create test.env file
         run: |
+          # Parity injection: writes GitHub secrets to local test.env expected by dotenv loaders
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > test.env
           echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> test.env
           echo "TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}" >> test.env
@@ -40,4 +40,4 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: pytest
+        run: pytest -v --tb=short # -v: verbose output, --tb=short: concise failure tracebacks
