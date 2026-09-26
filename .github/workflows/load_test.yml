@@ -5,7 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-  # Allows manual triggers from the GitHub Actions tab
+  # Enable manual execution from the GitHub Actions UI for ad-hoc load verification
   workflow_dispatch:
 
 jobs:
@@ -13,26 +13,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.10 with Pip Caching
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip'
 
-      - name: Install Dependencies
+      - name: Install Load Testing & Transport Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install locust python-dotenv requests urllib3
 
-      - name: Create test.env from GitHub Secrets
+      - name: Inject Supabase Secrets into Environment File
         run: |
+          # Matches local python-dotenv loader expecting test.env in working/parent directory
           echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> test.env
-        # If your test.env sits in a parent directory, adjust the path here accordingly
+          # If your local test.env expects SUPABASE_URL too, inject it here:
+          # echo "SUPABASE_URL=https://aommnxekaskgjlwjsdpc.supabase.co" >> test.env
 
-      - name: Run Locust Headless Load Test
+      - name: Execute Headless Locust Regression Gate
         working-directory: tests
         run: |
+          # -u 5: Safe CI concurrency baseline (prevents Supabase starter rate-limit spikes)
+          # -r 1: Gentle spawn rate (1 user/sec) to avoid socket/TLS connection storms
+          # --run-time 30s: Bounded CI verification window
           locust -f locustfile.py --headless -u 5 -r 1 --run-time 30s --host https://aommnxekaskgjlwjsdpc.supabase.co
